@@ -72,7 +72,7 @@ class Spellchecker : public Nan::ObjectWrap {
       return Nan::ThrowError("Bad argument");
     }
 
-    Handle<String> string = Handle<String>::Cast(info[0]);
+    Local<String> string = Local<String>::Cast(info[0]);
     if (!string->IsString()) {
       return Nan::ThrowError("Bad argument");
     }
@@ -184,7 +184,7 @@ class Spellchecker : public Nan::ObjectWrap {
   }
 
  public:
-  static void Init(Handle<Object> exports) {
+  static void Init(Local<Object> exports) {
     Local<FunctionTemplate> tpl = Nan::New<FunctionTemplate>(Spellchecker::New);
 
     tpl->SetClassName(Nan::New<String>("Spellchecker").ToLocalChecked());
@@ -202,7 +202,7 @@ class Spellchecker : public Nan::ObjectWrap {
   }
 };
 
-void Init(Handle<Object> exports, Handle<Object> module) {
+void Init(Local<Object> exports, Local<Object> module) {
   Spellchecker::Init(exports);
 }
 
