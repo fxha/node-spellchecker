@@ -26,31 +26,33 @@ class Spellchecker : public Nan::ObjectWrap {
     if (info.Length() < 1) {
       return Nan::ThrowError("Bad argument");
     }
-    
+
     Spellchecker* that = Nan::ObjectWrap::Unwrap<Spellchecker>(info.Holder());
-    
-    bool has_contents = false; 
+
+    bool has_contents = false;
     if (info.Length() > 1) {
       if (!node::Buffer::HasInstance(info[1])) {
         return Nan::ThrowError("SetDictionary 2nd argument must be a Buffer");
       }
-      
+
       // NB: We must guarantee that we pin this Buffer
       that->dictData.Reset(info.GetIsolate(), info[1]);
       has_contents = true;
     }
 
-    std::string language = *String::Utf8Value(info[0]);
-    
+    Nan::Utf8String utf8_value(info[0]);
+    int len = utf8_value.length();
+    std::string language(*utf8_value, len);
+
     bool result;
     if (has_contents) {
       result = that->impl->SetDictionaryToContents(
-        (unsigned char*)node::Buffer::Data(info[1]), 
+        (unsigned char*)node::Buffer::Data(info[1]),
         node::Buffer::Length(info[1]));
     } else {
       result = that->impl->SetDictionary(language);
     }
-    
+
     info.GetReturnValue().Set(Nan::New(result));
   }
 
@@ -61,7 +63,9 @@ class Spellchecker : public Nan::ObjectWrap {
     }
 
     Spellchecker* that = Nan::ObjectWrap::Unwrap<Spellchecker>(info.Holder());
-    std::string word = *String::Utf8Value(info[0]);
+    Nan::Utf8String utf8_value(info[0]);
+    int len = utf8_value.length();
+    std::string word(*utf8_value, len);
 
     info.GetReturnValue().Set(Nan::New(that->impl->IsMisspelled(word)));
   }
@@ -85,7 +89,9 @@ class Spellchecker : public Nan::ObjectWrap {
     }
 
     std::vector<uint16_t> text(string->Length() + 1);
-    string->Write(reinterpret_cast<uint16_t *>(text.data()));
+
+    // Why did we do that?
+    // string->Write(reinterpret_cast<uint16_t *>(text.data()));
 
     Spellchecker* that = Nan::ObjectWrap::Unwrap<Spellchecker>(info.Holder());
     std::vector<MisspelledRange> misspelled_ranges = that->impl->CheckSpelling(text.data(), text.size());
@@ -109,12 +115,14 @@ class Spellchecker : public Nan::ObjectWrap {
     }
 
     Spellchecker* that = Nan::ObjectWrap::Unwrap<Spellchecker>(info.Holder());
-    std::string word = *String::Utf8Value(info[0]);
+    Nan::Utf8String utf8_value(info[0]);
+    int len = utf8_value.length();
+    std::string word(*utf8_value, len);
 
     that->impl->Add(word);
     return;
   }
-  
+
   static NAN_METHOD(Remove) {
     Nan::HandleScope scope;
     if (info.Length() < 1) {
@@ -122,7 +130,9 @@ class Spellchecker : public Nan::ObjectWrap {
     }
 
     Spellchecker* that = Nan::ObjectWrap::Unwrap<Spellchecker>(info.Holder());
-    std::string word = *String::Utf8Value(info[0]);
+    Nan::Utf8String utf8_value(info[0]);
+    int len = utf8_value.length();
+    std::string word(*utf8_value, len);
 
     that->impl->Remove(word);
     return;
@@ -136,7 +146,9 @@ class Spellchecker : public Nan::ObjectWrap {
 
     std::string path = ".";
     if (info.Length() > 0) {
-      std::string path = *String::Utf8Value(info[0]);
+      Nan::Utf8String utf8_value(info[0]);
+      int len = utf8_value.length();
+      std::string path(*utf8_value, len);
     }
 
     std::vector<std::string> dictionaries =
@@ -159,7 +171,12 @@ class Spellchecker : public Nan::ObjectWrap {
 
     Spellchecker* that = Nan::ObjectWrap::Unwrap<Spellchecker>(info.Holder());
 
-    std::string word = *String::Utf8Value(info[0]);
+    // Getting the length and passing it to the constructor is faster
+    // than calculating it in the string constructor
+    Nan::Utf8String utf8_value(info[0]);
+    int len = utf8_value.length();
+
+    std::string word(*utf8_value, len);
     std::vector<std::string> corrections =
       that->impl->GetCorrectionsForMisspelling(word);
 
@@ -198,7 +215,8 @@ class Spellchecker : public Nan::ObjectWrap {
     Nan::SetMethod(tpl->InstanceTemplate(), "add", Spellchecker::Add);
     Nan::SetMethod(tpl->InstanceTemplate(), "remove", Spellchecker::Remove);
 
-    exports->Set(Nan::New("Spellchecker").ToLocalChecked(), tpl->GetFunction());
+
+    Nan::Set(exports, Nan::New("Spellchecker").ToLocalChecked(), Nan::GetFunction(tpl).ToLocalChecked());
   }
 };
 
