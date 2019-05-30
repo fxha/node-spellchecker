@@ -90,8 +90,7 @@ class Spellchecker : public Nan::ObjectWrap {
 
     std::vector<uint16_t> text(string->Length() + 1);
 
-    // Why did we do that?
-    // string->Write(reinterpret_cast<uint16_t *>(text.data()));
+    string->Write(info.GetIsolate(), reinterpret_cast<uint16_t *>(text.data()));
 
     Spellchecker* that = Nan::ObjectWrap::Unwrap<Spellchecker>(info.Holder());
     std::vector<MisspelledRange> misspelled_ranges = that->impl->CheckSpelling(text.data(), text.size());
