@@ -136,6 +136,10 @@ void MacSpellchecker::Remove(const std::string& word) {
   }
 }
 
+uint32_t MacSpellchecker::GetSpellcheckerType() {
+  return 1;
+}
+
 std::vector<std::string> MacSpellchecker::GetCorrectionsForMisspelling(const std::string& word) {
   std::vector<std::string> corrections;
 

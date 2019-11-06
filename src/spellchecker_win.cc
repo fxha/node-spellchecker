@@ -6,6 +6,9 @@
 #include <cstdlib>
 #include <spellcheck.h>
 
+#include <objidl.h>
+#include <wrl/client.h>
+
 #include "spellchecker.h"
 #include "spellchecker_win.h"
 #include "spellchecker_hunspell.h"
@@ -14,6 +17,43 @@
 // standard console app.
 DEFINE_GUID(CLSID_SpellCheckerFactory,0x7AB36653,0x1796,0x484B,0xBD,0xFA,0xE7,0x4F,0x1D,0xB7,0xC1,0xDC);
 DEFINE_GUID(IID_ISpellCheckerFactory,0x8E018A9D,0x2415,0x4677,0xBF,0x08,0x79,0x4E,0xA6,0x1F,0x94,0xBB);
+
+typedef LONG /*NTSTATUS*/ (WINAPI *RtlGetVersionFn)(LPOSVERSIONINFOEXW);
+
+namespace {
+  bool isWindows10OrLater () {
+    static int8_t _versionInfo = -1;
+    if (_versionInfo != -1) {
+      return _versionInfo == 1;
+    }
+
+    HMODULE hMod = LoadLibrary("ntdll.dll");
+    if (!hMod) {
+      _versionInfo = 0;
+      return false;
+    }
+
+    RtlGetVersionFn RtlGetVersion = (RtlGetVersionFn)GetProcAddress(hMod, "RtlGetVersion");
+    if (!RtlGetVersion) {
+      FreeLibrary(hMod);
+      _versionInfo = 0;
+      return false;
+    }
+
+    OSVERSIONINFOEXW osInfo;
+    ZeroMemory(&osInfo, sizeof(osInfo));
+    osInfo.dwOSVersionInfoSize = sizeof(osInfo);
+    if (RtlGetVersion(&osInfo) != 0) {
+      FreeLibrary(hMod);
+      _versionInfo = 0;
+      return false;
+    }
+    FreeLibrary(hMod);
+
+    _versionInfo = osInfo.dwMajorVersion >= 10 ? 1 : 0;
+    return _versionInfo == 1;
+  }
+}
 
 namespace spellchecker {
 
@@ -116,7 +156,9 @@ bool WindowsSpellchecker::SetDictionary(const std::string& language) {
     return false;
   }
 
-  if (!isSupported) return false;
+  if (!isSupported) {
+    return false;
+  }
 
   if (FAILED(this->spellcheckerFactory->CreateSpellChecker(wlanguage.c_str(), &this->currentSpellchecker))) {
     return false;
@@ -231,10 +273,23 @@ void WindowsSpellchecker::Add(const std::string& word) {
 }
 
 void WindowsSpellchecker::Remove(const std::string& word) {
-  // NB: ISpellChecker has no way to remove words from the dictionary
-  return;
+  if (this->currentSpellchecker == NULL) {
+    return;
+  }
+
+  // NB: ISpellChecker has no way to remove words from the dictionary but ISpellChecker2
+  // that is only supported on Windows 10.
+  Microsoft::WRL::ComPtr<ISpellChecker2> spellchecker2;
+  HRESULT queryResult = this->currentSpellchecker->QueryInterface(IID_PPV_ARGS(&spellchecker2));
+  if (!FAILED(queryResult) && spellchecker2) {
+    std::wstring wword = ToWString(word);
+    spellchecker2->Remove(wword.c_str());
+  }
 }
 
+uint32_t WindowsSpellchecker::GetSpellcheckerType() {
+  return 2;
+}
 
 std::vector<std::string> WindowsSpellchecker::GetCorrectionsForMisspelling(const std::string& word) {
   if (this->currentSpellchecker == NULL) {
@@ -272,12 +327,16 @@ std::vector<std::string> WindowsSpellchecker::GetCorrectionsForMisspelling(const
 }
 
 SpellcheckerImplementation* SpellcheckerFactory::CreateSpellchecker() {
-  WindowsSpellchecker* ret = new WindowsSpellchecker();
-  if (ret->IsSupported() && getenv("SPELLCHECKER_PREFER_HUNSPELL") == NULL) {
-    return ret;
+  // NB: Only support OS spellchecker on Windows 10 due to remove method that
+  // requires ISpellChecker2.
+  if (isWindows10OrLater()) {
+    WindowsSpellchecker* ret = new WindowsSpellchecker();
+    if (ret->IsSupported() && getenv("SPELLCHECKER_PREFER_HUNSPELL") == NULL) {
+      return ret;
+    }
+    delete ret;
   }
 
-  delete ret;
   return new HunspellSpellchecker();
 }
 

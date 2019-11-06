@@ -22,6 +22,8 @@ public:
   void Add(const std::string& word);
   void Remove(const std::string& word);
 
+  uint32_t GetSpellcheckerType();
+
 private:
   Hunspell* hunspell;
   Transcoder *transcoder;

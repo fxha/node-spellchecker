@@ -37,6 +37,9 @@ public:
   // time the spellchecker is created. Use a custom dictionary file.
   virtual void Remove(const std::string& word) = 0;
 
+  /// Returns the spellchecker type.
+  virtual uint32_t GetSpellcheckerType() = 0;
+
   virtual ~SpellcheckerImplementation() {}
 };
 

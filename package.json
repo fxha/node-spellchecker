@@ -2,7 +2,7 @@
   "main": "./lib/spellchecker.js",
   "name": "@hfelix/spellchecker",
   "description": "Bindings to native spellchecker",
-  "version": "4.0.11",
+  "version": "4.0.12-rc.0",
   "licenses": [
     {
       "type": "MIT",
@@ -24,6 +24,9 @@
     "jasmine-focused": "1.x"
   },
   "dependencies": {
-    "nan": "^2.13.2"
+    "nan": "^2.14.0"
+  },
+  "engines": {
+    "node": ">=12.0.0"
   }
 }

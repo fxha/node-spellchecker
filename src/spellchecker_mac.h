@@ -21,6 +21,8 @@ public:
   std::vector<MisspelledRange> CheckSpelling(const uint16_t *text, size_t length);
   void Add(const std::string& word);
   void Remove(const std::string& word);
+
+  uint32_t GetSpellcheckerType();
   
 private:
   NSSpellChecker* spellChecker;

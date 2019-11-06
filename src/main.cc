@@ -137,6 +137,11 @@ class Spellchecker : public Nan::ObjectWrap {
     return;
   }
 
+  static NAN_METHOD(GetSpellcheckerType) {
+    Spellchecker* that = Nan::ObjectWrap::Unwrap<Spellchecker>(info.Holder());
+    info.GetReturnValue().Set(Nan::New(that->impl->GetSpellcheckerType()));
+  }
+
 
   static NAN_METHOD(GetAvailableDictionaries) {
     Nan::HandleScope scope;
@@ -213,7 +218,7 @@ class Spellchecker : public Nan::ObjectWrap {
     Nan::SetMethod(tpl->InstanceTemplate(), "checkSpelling", Spellchecker::CheckSpelling);
     Nan::SetMethod(tpl->InstanceTemplate(), "add", Spellchecker::Add);
     Nan::SetMethod(tpl->InstanceTemplate(), "remove", Spellchecker::Remove);
-
+    Nan::SetMethod(tpl->InstanceTemplate(), "getSpellcheckerType", Spellchecker::GetSpellcheckerType);
 
     Nan::Set(exports, Nan::New("Spellchecker").ToLocalChecked(), Nan::GetFunction(tpl).ToLocalChecked());
   }
