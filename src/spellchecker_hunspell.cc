@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cwctype>
+#include <clocale>
 #include <algorithm>
 #include "../vendor/hunspell/src/hunspell/hunspell.hxx"
 #include "spellchecker_hunspell.h"
