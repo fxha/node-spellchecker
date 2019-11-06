@@ -3,22 +3,21 @@
   "name": "@hfelix/spellchecker",
   "description": "Bindings to native spellchecker",
   "version": "4.0.12-rc.2",
+  "scripts": {
+    "test": "jasmine-focused --captureExceptions --coffee spec/"
+  },
   "licenses": [
     {
       "type": "MIT",
-      "url": "http://github.com/atom/node-spellchecker/raw/master/LICENSE.md"
+      "url": "https://github.com/fxha/node-spellchecker/raw/master/LICENSE.md"
     }
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/atom/node-spellchecker.git"
+    "url": "https://github.com/fxha/node-spellchecker.git"
   },
   "bugs": {
-    "url": "https://github.com/atom/node-spellchecker/issues"
-  },
-  "homepage": "http://atom.github.io/node-spellchecker",
-  "scripts": {
-    "test": "jasmine-focused --captureExceptions --coffee spec/"
+    "url": "https://github.com/fxha/node-spellchecker/issues"
   },
   "devDependencies": {
     "jasmine-focused": "1.x"

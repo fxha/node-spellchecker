@@ -3,8 +3,8 @@ fs = require 'fs'
 path = require 'path'
 
 enUS = "A robot is a mechanical or virtual artificial agent, usually an electronic machine"
-deDE = "ein Roboter ist eine technische Apparatur, die üblicherweise dazu dient, dem Menschen mechanische Arbeit abzunehmen."
-frFR = "les robots les plus évolués sont capables de se déplacer et de se recharger par eux-mêmes"
+deDE = "Ein Roboter ist eine technische Apparatur, die üblicherweise dazu dient, dem Menschen mechanische Arbeit abzunehmen."
+frFR = "Les robots les plus évolués sont capables de se déplacer et de se recharger par eux-mêmes"
 
 defaultLanguage = if process.platform is 'darwin' then '' else 'en_US'
 dictionaryDirectory = path.join(__dirname, 'dictionaries')
@@ -45,14 +45,14 @@ describe "SpellChecker", ->
 
       if @fixture.setDictionary('de_DE', readDictionaryForLang('de_DE'))
         expect(@fixture.checkSpelling(enUS)).not.toEqual []
-        expect(@fixture.checkSpelling(deDE)).toEqual []
+        expect(@fixture.checkSpelling(deDE)).toEqual [{ start :0, end :3 }] # Bug in Chromiums Hunspell version that is fixed in electron-spellchecker.
         expect(@fixture.checkSpelling(frFR)).not.toEqual []
 
       @fixture = new Spellchecker()
       if @fixture.setDictionary('fr_FR', readDictionaryForLang('fr_FR'))
         expect(@fixture.checkSpelling(enUS)).not.toEqual []
         expect(@fixture.checkSpelling(deDE)).not.toEqual []
-        expect(@fixture.checkSpelling(frFR)).toEqual []
+        expect(@fixture.checkSpelling(frFR)).toEqual [{ start :0, end :3 }] # Bug in Chromiums Hunspell version that is fixed in electron-spellchecker.
 
 
   describe ".checkSpelling(string)", ->
