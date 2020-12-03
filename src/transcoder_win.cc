@@ -1,5 +1,6 @@
+#include <cstring>
+#include <cstdlib>
 #include <windows.h>
-#include <stdlib.h>
 #include "transcoder.h"
 
 namespace spellchecker {

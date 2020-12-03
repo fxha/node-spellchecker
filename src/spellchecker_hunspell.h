@@ -31,4 +31,4 @@ private:
 
 }  // namespace spellchecker
 
-#endif  // SRC_SPELLCHECKER_MAC_H_
+#endif  // SRC_SPELLCHECKER_HUNSPELL_H_

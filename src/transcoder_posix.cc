@@ -1,6 +1,7 @@
+#include <cstring>
+#include <cstdint>
+#include <cstdlib>
 #include <iconv.h>
-#include <stdint.h>
-#include <stdlib.h>
 
 namespace spellchecker {
 

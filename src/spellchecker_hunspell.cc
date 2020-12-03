@@ -4,6 +4,7 @@
 #include <algorithm>
 #include "../vendor/hunspell/src/hunspell/hunspell.hxx"
 #include "spellchecker_hunspell.h"
+#include "buffers.h"
 
 namespace spellchecker {
 
@@ -46,6 +47,12 @@ bool HunspellSpellchecker::IsMisspelled(const std::string& word) {
   if (!hunspell) {
     return false;
   }
+
+  // If the word is too long, then don't do anything.
+  if (word.length() > MAX_UTF8_BUFFER) {
+    return false;
+  }
+
   return hunspell->spell(word.c_str()) == 0;
 }
 
@@ -56,7 +63,7 @@ std::vector<MisspelledRange> HunspellSpellchecker::CheckSpelling(const uint16_t 
     return result;
   }
 
-  std::vector<char> utf8_buffer(256);
+  std::vector<char> utf8_buffer(MAX_UTF16_TO_UTF8_BUFFER);
 
   enum {
     unknown,
@@ -71,7 +78,8 @@ std::vector<MisspelledRange> HunspellSpellchecker::CheckSpelling(const uint16_t 
   setlocale(LC_CTYPE, "en_US.UTF-8");
 
   // Go through the UTF-16 characters and look for breaks.
-  for (size_t word_start = 0, i = 0; i < utf16_length; i++) {
+  size_t word_start = 0, i = 0;
+  for (; i < utf16_length; ++i) {
     uint16_t c = utf16_text[i];
 
     switch (state) {
@@ -92,7 +100,7 @@ std::vector<MisspelledRange> HunspellSpellchecker::CheckSpelling(const uint16_t 
 
       case in_word:
         if (c == '\'' && iswalpha(utf16_text[i + 1])) {
-          i++;
+          ++i;
         } else if (c == 0 || iswpunct(c) || iswspace(c)) {
           state = in_separator;
           bool converted = TranscodeUTF16ToUTF8(transcoder, (char *)utf8_buffer.data(), utf8_buffer.size(), utf16_text + word_start, i - word_start);
@@ -108,6 +116,19 @@ std::vector<MisspelledRange> HunspellSpellchecker::CheckSpelling(const uint16_t 
           state = unknown;
         }
         break;
+    }
+  }
+
+  // Allow strings that doesn't end with \0 or 0x00.
+  if (state == in_word) {
+    bool converted = TranscodeUTF16ToUTF8(transcoder, (char *)utf8_buffer.data(), utf8_buffer.size(), utf16_text + word_start, i - word_start);
+    if (converted) {
+      if (hunspell->spell(utf8_buffer.data()) == 0) {
+        MisspelledRange range;
+        range.start = word_start;
+        range.end = i;
+        result.push_back(range);
+      }
     }
   }
 
